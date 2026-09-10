@@ -226,7 +226,7 @@ input.f{width:100%;background:var(--ink);border:1px solid var(--line);border-rad
       <input class="f" id="aiKey" type="password" placeholder="incolla la chiave" autocomplete="off">
       <p id="keyKind" style="margin:6px 0 0;font-size:13px;color:var(--muted)"></p>
       <label class="f" for="aiModel">Modello (lascia vuoto se non sai)</label>
-      <input class="f" id="aiModel" placeholder="gemini-2.5-flash">
+      <input class="f" id="aiModel" placeholder="scelto automaticamente">
       <div class="row" style="margin-top:12px"><button class="btn ghost" id="testKey">Prova la chiave</button></div>
       <p id="testOut" style="margin:10px 0 0"></p>
     </div>
@@ -247,7 +247,7 @@ input.f{width:100%;background:var(--ink);border:1px solid var(--line);border-rad
       </div>
     </div>
     <p class="hint">I testi arrivano da archivi pubblici mantenuti dalla comunità (LRCLIB, lyrics.ovh) e restano sul tuo dispositivo: Ritornello non ne conserva né ridistribuisce copie. Sono materiale protetto da copyright, quindi vanno usati per studio personale.</p>
-    <p class="hint" style="text-align:center;font-size:12px;color:var(--gold)">Ritornello · versione 6</p>
+    <p class="hint" style="text-align:center;font-size:12px;color:var(--gold)">Ritornello · versione 7</p>
   </section>
 </main>
 
@@ -560,21 +560,42 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeWord(); });
 
 /* ============ significato (Claude) ============ */
 const provider = k => !k ? '' : /^sk-ant/.test(k) ? 'anthropic' : 'google';
+let modelCache='';
+async function pickModel(key){
+  const chosen=(settings.model||'').trim();
+  if(chosen) return chosen;
+  if(modelCache) return modelCache;
+  try{
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',{headers:{'x-goog-api-key':key}});
+    if(r.ok){
+      const d=await r.json();
+      const names=(d.models||[])
+        .filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent'))
+        .map(m=>String(m.name||'').replace('models/',''))
+        .filter(n=>!/embedding|imagen|image|tts|audio|vision|gemma|learnlm/i.test(n));
+      const score=n=>(/flash/i.test(n)?100:0)+(/lite/i.test(n)?-8:0)+(/preview|exp/i.test(n)?-3:0)
+        +(/pro/i.test(n)?-40:0)+((parseFloat((n.match(/(\d+(?:\.\d+)?)/)||[])[1])||0)*3);
+      names.sort((a,b)=>score(b)-score(a));
+      if(names[0]){ modelCache=names[0]; return names[0]; }
+    }
+  }catch(e){}
+  return 'gemini-flash-latest';
+}
 async function callAI(prompt){
   const key=(settings.ai||'').trim();
-  const model=(settings.model||'').trim();
   if(!key) throw new Error('Nessuna chiave salvata');
   const p=provider(key);
   const detail=async r=>{ let m=''; try{ const j=await r.json(); m=j.error?.message||''; }catch(e){} return r.status+(m?' — '+m:''); };
   if(p==='google'){
-    const m=model.includes('gemini')?model:'gemini-2.5-flash';
+    const m=await pickModel(key);
     const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent',
       {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},
        body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
-    if(!r.ok) throw new Error('Google '+await detail(r));
+    if(!r.ok){ modelCache=''; throw new Error('Google '+m+' '+await detail(r)); }
     const d=await r.json();
     return (d.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('\n').trim();
   }
+  const model=(settings.model||'').trim();
   const headers={'Content-Type':'application/json','anthropic-version':'2023-06-01',
     'x-api-key':key,'anthropic-dangerous-direct-browser-access':'true'};
   const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers,
@@ -684,7 +705,7 @@ $('#testKey').onclick=async ()=>{
   try{
     const r=await callAI('Rispondi soltanto con la parola: funziona');
     out.style.color='var(--mint)';
-    out.textContent='Tutto a posto, la chiave risponde. ('+(provider(settings.ai)==='google'?'Google':'Anthropic')+')';
+    out.textContent='Tutto a posto: '+(provider(settings.ai)==='google'?'Google, modello '+(modelCache||settings.model||'automatico'):'Anthropic')+'.';
   }catch(e){
     out.style.color='var(--rose)';
     out.textContent=String(e.message);
