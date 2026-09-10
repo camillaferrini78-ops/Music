@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ritornello — impara l'inglese con le canzoni</title>
+<meta name="description" content="Impara l'inglese ascoltando canzoni: testo, traduzione, significato e vocabolario.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0C1826">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0C1826; --ink2:#142438; --ink3:#1B3049; --line:#24394F;
+  --paper:#F4EFE6; --paper2:#E7DECD;
+  --gold:#E9A63C; --mint:#67D6B0; --rose:#E4737A;
+  --text:#E7EDF4; --muted:#93A7BC;
+  --ui:"Bricolage Grotesque",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --rail:0px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ink); color:var(--text); font-family:var(--ui);
+  font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(72px + env(safe-area-inset-bottom));
+}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+a{color:var(--gold)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+
+/* ---------- shell ---------- */
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 24px}
+.masthead{display:flex;align-items:baseline;gap:10px;margin:6px 0 18px}
+.logo{font-weight:800;font-size:24px;letter-spacing:-.02em}
+.logo em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--gold)}
+.tag{color:var(--muted);font-size:13px}
+
+nav.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  display:grid;grid-template-columns:repeat(5,1fr);
+  background:rgba(12,24,38,.94);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+}
+nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:11px;padding:4px 2px}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-current="true"]{color:var(--gold)}
+.view{display:none}
+.view.on{display:block}
+
+/* ---------- search ---------- */
+.searchbar{display:flex;gap:8px;align-items:center;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:6px 6px 6px 14px}
+.searchbar input{flex:1;background:none;border:none;padding:10px 0;font-size:16px;min-width:0}
+.searchbar input::placeholder{color:var(--muted)}
+.btn{background:var(--gold);color:#221503;font-weight:600;border-radius:10px;padding:10px 14px}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--text);font-weight:500}
+.btn.mint{background:var(--mint);color:#06231a}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mic{margin-top:12px;width:100%;display:flex;align-items:center;gap:14px;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:14px}
+.mic .dot{width:44px;height:44px;border-radius:50%;background:var(--rose);display:grid;place-items:center;flex:none}
+.mic .dot svg{width:20px;height:20px;stroke:#2a0c0e;fill:none;stroke-width:1.8;stroke-linecap:round}
+.mic.rec .dot{animation:pulse 1.1s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(228,115,122,.55)}100%{box-shadow:0 0 0 16px rgba(228,115,122,0)}}
+@media (prefers-reduced-motion:reduce){.mic.rec .dot{animation:none}}
+.mic b{display:block;font-weight:600}
+.mic span{color:var(--muted);font-size:13px}
+
+.hint{color:var(--muted);font-size:13px;margin:14px 2px}
+.results{margin-top:18px;display:flex;flex-direction:column;gap:2px}
+.hit{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px 8px;border-radius:12px}
+.hit:hover,.hit:focus-visible{background:var(--ink2)}
+.hit img{width:52px;height:52px;border-radius:8px;flex:none;background:var(--ink3);object-fit:cover}
+.hit b{display:block;font-weight:600;font-size:15px}
+.hit span{display:block;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.year{font-family:var(--serif);color:var(--gold);font-size:15px;flex:none}
+
+/* ---------- song ---------- */
+.cover{display:flex;gap:16px;align-items:flex-start}
+.cover img{width:112px;height:112px;border-radius:10px;flex:none;background:var(--ink3)}
+.title{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0 0 4px}
+.by{color:var(--muted);margin:0 0 8px}
+.meta{font-family:var(--serif);font-size:17px;color:var(--gold)}
+audio{width:100%;margin-top:14px;height:38px}
+.links{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.links a{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;text-decoration:none;color:var(--text)}
+.links a:hover{border-color:var(--gold)}
+
+.panel{margin-top:22px;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:16px}
+.panel h3{margin:0 0 8px;font-size:16px;font-weight:600}
+.panel p{margin:0 0 12px;color:var(--muted);font-size:14px}
+textarea{width:100%;min-height:150px;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font-family:var(--serif);font-size:16px;line-height:1.6;resize:vertical}
+
+.sheet{
+  margin-top:22px;background:var(--paper);color:#1B1710;border-radius:16px;
+  padding:26px 22px 30px;box-shadow:0 18px 40px rgba(0,0,0,.35);
+}
+.sheet .sheethead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--paper2)}
+.sheet .sheethead b{font-family:var(--serif);font-weight:500;font-size:15px;color:#6B5B41}
+.mini{font-size:12px;border:1px solid #C9BCA2;border-radius:999px;padding:5px 10px;color:#5A4C36}
+.mini.on{background:#1B1710;color:var(--paper);border-color:#1B1710}
+.lines{font-family:var(--serif);font-size:19px;line-height:1.75;max-width:38em}
+.line{margin:0 0 2px}
+.line.blank{height:14px}
+.w{cursor:pointer;border-radius:4px;padding:0 1px;transition:background .12s}
+.w:hover{background:#EAD9AF}
+.w.known{box-shadow:inset 0 -2px 0 rgba(233,166,60,.9)}
+.tr{font-family:var(--ui);font-size:14px;color:#6B5B41;margin:0 0 12px;min-height:1px}
+.tr.pending{opacity:.45;font-style:italic}
+
+/* word sheet */
+.scrim{position:fixed;inset:0;background:rgba(6,12,20,.6);z-index:60;display:none}
+.scrim.on{display:block}
+.wordcard{
+  position:fixed;left:0;right:0;bottom:0;z-index:70;background:var(--ink2);
+  border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));
+  transform:translateY(101%);transition:transform .22s ease;max-height:72vh;overflow:auto;
+}
+.wordcard.on{transform:none}
+@media (prefers-reduced-motion:reduce){.wordcard{transition:none}}
+@media(min-width:760px){.wordcard{left:50%;right:auto;bottom:24px;width:520px;transform:translate(-50%,140%);border-radius:18px;border:1px solid var(--line)}
+.wordcard.on{transform:translate(-50%,0)}}
+.wordcard h2{margin:0;font-size:26px;letter-spacing:-.02em}
+.phon{color:var(--muted);font-family:var(--serif);font-size:16px}
+.big{font-family:var(--serif);font-size:22px;color:var(--mint);margin:10px 0 6px}
+.defs{margin:10px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.defs li{margin-bottom:6px}
+.defs em{color:var(--text);font-style:normal}
+
+/* lists */
+.card{display:flex;gap:12px;align-items:center;background:var(--ink2);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;width:100%;text-align:left}
+.card img{width:44px;height:44px;border-radius:7px;flex:none}
+.card b{font-size:15px;font-weight:600;display:block}
+.card span{font-size:13px;color:var(--muted)}
+.vword{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line)}
+.vword b{font-weight:600}
+.vword i{font-style:normal;color:var(--mint);font-family:var(--serif);font-size:17px}
+.vword small{display:block;color:var(--muted);font-size:12px}
+.x{color:var(--muted);font-size:20px;padding:0 6px}
+.empty{text-align:center;color:var(--muted);padding:48px 20px;font-size:15px}
+.empty b{display:block;color:var(--text);font-weight:600;margin-bottom:6px;font-size:17px}
+label.f{display:block;margin:14px 0 6px;font-size:14px}
+input.f{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:88px;background:var(--paper);color:#1B1710;padding:10px 16px;border-radius:999px;font-size:14px;z-index:90;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+.flash{background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:28px 18px;text-align:center;margin-top:14px}
+.flash h2{font-size:30px;margin:0 0 4px}
+.flash .rev{font-family:var(--serif);font-size:22px;color:var(--mint);min-height:32px}
+
+@media(min-width:900px){
+  body{padding-bottom:0;padding-left:212px}
+  nav.tabs{top:0;bottom:0;right:auto;width:212px;grid-template-columns:1fr;grid-auto-rows:min-content;align-content:start;gap:2px;border-top:none;border-right:1px solid var(--line);padding:24px 12px}
+  nav.tabs button{flex-direction:row;justify-content:flex-start;gap:12px;font-size:15px;padding:11px 12px;border-radius:10px}
+  nav.tabs button[aria-current="true"]{background:var(--ink2)}
+  .wrap{padding-top:34px}
+}
+</style>
+</head>
+<body>
+
+<nav class="tabs">
+  <button data-go="search" aria-current="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Cerca</button>
+  <button data-go="song"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>Canzone</button>
+  <button data-go="history"><svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Storico</button>
+  <button data-go="vocab"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H19v16H6.5A2.5 2.5 0 004 21.5z"/><path d="M8 8h7"/></svg>Parole</button>
+  <button data-go="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-2.7 1.1V21a2 2 0 11-4 0v-.1A1.6 1.6 0 005 19.4l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.6 1.6 0 003 14H3a2 2 0 010-4h.1A1.6 1.6 0 004.6 5l-.1-.1a2 2 0 112.8-2.8l.1.1A1.6 1.6 0 0010 3V3a2 2 0 014 0v.1a1.6 1.6 0 002.7 1.1l.1-.1a2 2 0 112.8 2.8l-.1.1A1.6 1.6 0 0021 10h0a2 2 0 010 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg>Impostazioni</button>
+</nav>
+
+<main class="wrap">
+  <div class="masthead">
+    <div class="logo">Ritor<em>nello</em></div>
+    <div class="tag">l'inglese, una canzone alla volta</div>
+  </div>
+
+  <!-- SEARCH -->
+  <section class="view on" id="v-search">
+    <div class="searchbar">
+      <input id="q" type="search" placeholder="Titolo o artista — es. Yesterday, Adele" autocomplete="off" enterkeyhint="search">
+      <button class="btn" id="go">Cerca</button>
+    </div>
+
+    <button class="mic" id="mic">
+      <span class="dot"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg></span>
+      <span style="text-align:left">
+        <b id="micTitle">Riconosci una canzone</b>
+        <span id="micSub">Registra 8 secondi di quello che stai ascoltando</span>
+      </span>
+    </button>
+
+    <p class="hint" id="searchHint">Cerca un brano, apri il testo e tocca una parola qualsiasi per la traduzione.</p>
+    <div class="results" id="results"></div>
+  </section>
+
+  <!-- SONG -->
+  <section class="view" id="v-song"></section>
+
+  <!-- HISTORY -->
+  <section class="view" id="v-history"></section>
+
+  <!-- VOCAB -->
+  <section class="view" id="v-vocab"></section>
+
+  <!-- SETTINGS -->
+  <section class="view" id="v-settings">
+    <h2 style="margin:0 0 6px;font-size:20px">Impostazioni</h2>
+    <p class="hint" style="margin-left:0">Le chiavi restano solo su questo dispositivo.</p>
+
+    <div class="panel">
+      <h3>Riconoscimento audio</h3>
+      <p>Per identificare una canzone dal microfono serve un servizio di riconoscimento. Crea un token gratuito su audd.io e incollalo qui.</p>
+      <label class="f" for="auddKey">Token AudD</label>
+      <input class="f" id="auddKey" type="password" placeholder="incolla il token" autocomplete="off">
+    </div>
+
+    <div class="panel">
+      <h3>Spiegazione del significato</h3>
+      <p>La spiegazione del testo è generata da Claude. Incolla una chiave API Anthropic per usarla su questo dispositivo.</p>
+      <label class="f" for="aiKey">Chiave API Anthropic</label>
+      <input class="f" id="aiKey" type="password" placeholder="sk-ant-..." autocomplete="off">
+      <label class="f" for="aiModel">Modello</label>
+      <input class="f" id="aiModel" placeholder="claude-sonnet-4-6">
+    </div>
+
+    <div class="panel">
+      <h3>Se il testo non arriva</h3>
+      <p>Alcuni browser bloccano le richieste agli archivi di testi. In quel caso indica qui un indirizzo che faccia da ponte, per esempio <code>https://corsproxy.io/?</code>, e l'app lo userà per le ricerche.</p>
+      <label class="f" for="proxy">Indirizzo del ponte</label>
+      <input class="f" id="proxy" placeholder="lascia vuoto se tutto funziona" autocomplete="off">
+    </div>
+
+    <div class="panel">
+      <h3>Dati</h3>
+      <p>Storico, testi salvati e vocabolario vivono in questo browser.</p>
+      <div class="row">
+        <button class="btn ghost" id="exportData">Esporta un backup</button>
+        <button class="btn ghost" id="wipe">Cancella tutto</button>
+      </div>
+    </div>
+    <p class="hint">I testi arrivano da archivi pubblici mantenuti dalla comunità (LRCLIB, lyrics.ovh) e restano sul tuo dispositivo: Ritornello non ne conserva né ridistribuisce copie. Sono materiale protetto da copyright, quindi vanno usati per studio personale.</p>
+  </section>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="wordcard" id="wordcard" role="dialog" aria-modal="true" aria-label="Parola"></aside>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ storage (con fallback in memoria) ============ */
+const mem = {};
+const S = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v===null ? (k in mem ? mem[k] : d) : JSON.parse(v); }catch(e){ return (k in mem) ? mem[k] : d; } },
+  set(k, v){ mem[k]=v; try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ delete mem[k]; try{ localStorage.removeItem(k); }catch(e){} }
+};
+const K = { hist:'ll.history', vocab:'ll.vocab', set:'ll.settings',
+  lyr:id=>'ll.lyr.'+id, tr:id=>'ll.tr.'+id, mean:id=>'ll.mean.'+id };
+let settings = S.get(K.set, {audd:'', ai:'', model:'claude-sonnet-4-6'});
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2600); }
+
+/* ============ navigazione ============ */
+const views = ['search','song','history','vocab','settings'];
+function go(name){
+  views.forEach(v=>$('#v-'+v).classList.toggle('on', v===name));
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-current', String(b.dataset.go===name)));
+  window.scrollTo(0,0);
+  if(name==='history') renderHistory();
+  if(name==='vocab') renderVocab();
+  if(name==='song' && !current) $('#v-song').innerHTML = '<div class="empty"><b>Nessuna canzone aperta</b>Cerca un brano e comincia da lì.</div>';
+}
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.go));
+
+/* ============ ricerca brani (iTunes) ============ */
+function jsonp(url){
+  return new Promise((res,rej)=>{
+    const cb='cb'+Math.random().toString(36).slice(2);
+    const s=document.createElement('script');
+    const done=ok=>{ delete window[cb]; s.remove(); };
+    window[cb]=d=>{ done(); res(d); };
+    s.onerror=()=>{ done(); rej(new Error('offline')); };
+    s.src=url+'&callback='+cb;
+    document.head.appendChild(s);
+    setTimeout(()=>{ if(window[cb]){ done(); rej(new Error('timeout')); } }, 9000);
+  });
+}
+async function searchSongs(q){
+  const url='https://itunes.apple.com/search?entity=song&limit=25&term='+encodeURIComponent(q);
+  try{ const r=await fetch(url); if(r.ok) return (await r.json()).results||[]; }catch(e){}
+  const d=await jsonp(url); return d.results||[];
+}
+$('#go').onclick = runSearch;
+$('#q').addEventListener('keydown', e=>{ if(e.key==='Enter') runSearch(); });
+async function runSearch(){
+  const q=$('#q').value.trim(); if(!q) return;
+  $('#results').innerHTML=''; $('#searchHint').textContent='Cerco «'+q+'»…';
+  try{
+    const res=await searchSongs(q);
+    if(!res.length){ $('#searchHint').textContent='Nessun brano trovato. Prova con artista e titolo insieme.'; return; }
+    $('#searchHint').textContent=res.length+' risultati';
+    $('#results').innerHTML = res.map((t,i)=>`
+      <button class="hit" data-i="${i}">
+        <img src="${esc((t.artworkUrl100||'').replace('100x100','200x200'))}" alt="" loading="lazy">
+        <span style="flex:1;min-width:0"><b>${esc(t.trackName)}</b><span>${esc(t.artistName)} · ${esc(t.collectionName||'')}</span></span>
+        <span class="year">${(t.releaseDate||'').slice(0,4)}</span>
+      </button>`).join('');
+    document.querySelectorAll('#results .hit').forEach(b=>b.onclick=()=>openSong(fromITunes(res[+b.dataset.i])));
+  }catch(e){ $('#searchHint').textContent='Ricerca non riuscita: controlla la connessione.'; }
+}
+const fromITunes = t => ({
+  id:'it'+t.trackId, title:t.trackName, artist:t.artistName, album:t.collectionName||'',
+  year:(t.releaseDate||'').slice(0,4), art:(t.artworkUrl100||'').replace('100x100','400x400'),
+  preview:t.previewUrl||'', link:t.trackViewUrl||'', dur:Math.round((t.trackTimeMillis||0)/1000)
+});
+
+/* ============ riconoscimento audio ============ */
+let rec, chunks=[], recording=false;
+$('#mic').onclick = async ()=>{
+  if(recording) return;
+  if(!settings.audd){ toast('Aggiungi il token AudD nelle impostazioni'); go('settings'); return; }
+  if(!navigator.mediaDevices?.getUserMedia){ toast('Microfono non disponibile qui'); return; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    chunks=[]; rec=new MediaRecorder(stream); recording=true;
+    $('#mic').classList.add('rec'); $('#micTitle').textContent='In ascolto…';
+    let n=8; $('#micSub').textContent=n+' secondi';
+    const tick=setInterval(()=>{ $('#micSub').textContent=(--n)+' secondi'; },1000);
+    rec.ondataavailable=e=>chunks.push(e.data);
+    rec.onstop=async ()=>{
+      clearInterval(tick); stream.getTracks().forEach(t=>t.stop());
+      $('#mic').classList.remove('rec'); $('#micTitle').textContent='Riconosco il brano…'; $('#micSub').textContent='un attimo';
+      try{
+        const fd=new FormData();
+        fd.append('api_token', settings.audd);
+        fd.append('file', new Blob(chunks,{type:'audio/webm'}), 'clip.webm');
+        fd.append('return','apple_music,spotify');
+        const r=await fetch('https://api.audd.io/', {method:'POST', body:fd});
+        const d=await r.json();
+        if(d.result){
+          $('#q').value = d.result.artist+' '+d.result.title;
+          resetMic(); runSearch();
+        } else { resetMic(); toast('Non l\'ho riconosciuta. Riprova più vicino alla fonte.'); }
+      }catch(e){ resetMic(); toast('Riconoscimento non riuscito'); }
+    };
+    rec.start(); setTimeout(()=>{ if(rec.state==='recording') rec.stop(); recording=false; }, 8000);
+  }catch(e){ resetMic(); toast('Permesso microfono negato'); }
+};
+function resetMic(){ recording=false; $('#mic').classList.remove('rec'); $('#micTitle').textContent='Riconosci una canzone'; $('#micSub').textContent='Registra 8 secondi di quello che stai ascoltando'; }
+
+/* ============ scheda canzone ============ */
+let current=null, showTr=true;
+function openSong(song){
+  current=song; pushHistory(song); go('song'); renderSong();
+}
+function renderSong(){
+  const s=current, lyr=S.get(K.lyr(s.id),'');
+  const yt='https://www.youtube.com/results?search_query='+encodeURIComponent(s.artist+' '+s.title);
+  const sp='https://open.spotify.com/search/'+encodeURIComponent(s.artist+' '+s.title);
+  const ge='https://genius.com/search?q='+encodeURIComponent(s.artist+' '+s.title);
+  $('#v-song').innerHTML = `
+    <div class="cover">
+      <img src="${esc(s.art)}" alt="" >
+      <div style="min-width:0">
+        <h1 class="title">${esc(s.title)}</h1>
+        <p class="by">${esc(s.artist)}${s.album?' — '+esc(s.album):''}</p>
+        <div class="meta">${esc(s.year||'anno non disponibile')}</div>
+      </div>
+    </div>
+    ${s.preview?`<audio controls preload="none" src="${esc(s.preview)}"></audio>
+      <p class="hint" style="margin:6px 2px">Anteprima di 30 secondi. Per il brano intero usa i link qui sotto.</p>`:''}
+    <div class="links">
+      <a href="${yt}" target="_blank" rel="noopener">Ascolta su YouTube</a>
+      <a href="${sp}" target="_blank" rel="noopener">Apri in Spotify</a>
+      ${s.link?`<a href="${esc(s.link)}" target="_blank" rel="noopener">Apple Music</a>`:''}
+      <a href="${ge}" target="_blank" rel="noopener">Testo su Genius</a>
+    </div>
+    <div id="lyrArea"></div>`;
+  lyr ? renderSheet(lyr) : autoLyrics();
+}
+
+/* ---- recupero automatico del testo ---- */
+function px(url){ const p=(settings.proxy||'').trim(); return p ? p + (p.includes('?')||p.endsWith('=') ? encodeURIComponent(url) : url) : url; }
+async function jget(url){ const r=await fetch(px(url),{headers:{'Accept':'application/json'}}); if(!r.ok) throw new Error(r.status); return r.json(); }
+const stripTimes = t => t.split('\n').map(l=>l.replace(/^\s*\[\d{1,2}:\d{2}(?:[.:]\d{1,3})?\]\s*/,'')).join('\n');
+const norm = s => (s||'').toLowerCase().replace(/\(.*?\)|\[.*?\]|feat\..*$|- .*(remaster|version|edit|mix).*$/gi,'').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+
+async function findLyrics(s){
+  const q = new URLSearchParams({track_name:s.title, artist_name:s.artist});
+  if(s.album) q.set('album_name', s.album);
+  if(s.dur) q.set('duration', s.dur);
+  // 1. corrispondenza esatta su LRCLIB
+  try{ const d=await jget('https://lrclib.net/api/get?'+q); const t=d.plainLyrics||stripTimes(d.syncedLyrics||''); if(t.trim()) return t; }catch(e){}
+  // 2. ricerca su LRCLIB, scegliendo il risultato più simile
+  try{
+    const list=await jget('https://lrclib.net/api/search?track_name='+encodeURIComponent(s.title)+'&artist_name='+encodeURIComponent(s.artist));
+    const hit=(list||[]).find(x=>norm(x.trackName)===norm(s.title) && norm(x.artistName)===norm(s.artist)) || (list||[])[0];
+    if(hit){ const t=hit.plainLyrics||stripTimes(hit.syncedLyrics||''); if(t.trim()) return t; }
+  }catch(e){}
+  // 3. seconda fonte
+  try{
+    const d=await jget('https://api.lyrics.ovh/v1/'+encodeURIComponent(s.artist)+'/'+encodeURIComponent(s.title));
+    if(d.lyrics && d.lyrics.trim()) return d.lyrics.replace(/\r/g,'').replace(/^.*?Paroles de la chanson.*?\n/,'').trim();
+  }catch(e){}
+  return '';
+}
+async function autoLyrics(){
+  const s=current;
+  $('#lyrArea').innerHTML=`<div class="panel"><h3>Cerco il testo…</h3>
+    <p id="fetchMsg">Interrogo gli archivi di testi aperti.</p></div>`;
+  const t=await findLyrics(s);
+  if(current!==s) return;
+  if(t){ S.set(K.lyr(s.id), t); markHistory(s.id); renderSheet(t); toast('Testo trovato'); }
+  else renderPaste('', true);
+}
+function renderPaste(val, failed){
+  $('#lyrArea').innerHTML=`
+    <div class="panel">
+      <h3>${failed?'Testo non trovato':'Il testo della canzone'}</h3>
+      <p>${failed
+        ? 'Gli archivi aperti non hanno questo brano, o il browser ha bloccato la richiesta. Riprova, oppure incolla il testo a mano: resterà salvato per sempre.'
+        : 'Modifica il testo salvato per questo brano.'}</p>
+      <div class="row" style="margin-bottom:12px">
+        <button class="btn ${failed?'':'ghost'}" id="retry">Cerca di nuovo</button>
+        ${failed?`<a class="btn ghost" style="text-decoration:none" href="https://genius.com/search?q=${encodeURIComponent(current.artist+' '+current.title)}" target="_blank" rel="noopener">Apri su Genius</a>`:''}
+      </div>
+      <textarea id="lyrIn" placeholder="…oppure incolla qui il testo in inglese">${esc(val)}</textarea>
+      <div class="row" style="margin-top:10px"><button class="btn" id="mk">Crea la lezione</button></div>
+    </div>`;
+  $('#retry').onclick=autoLyrics;
+  $('#mk').onclick=()=>{
+    const v=$('#lyrIn').value.trim();
+    if(!v){ toast('Incolla prima il testo'); return; }
+    S.set(K.lyr(current.id), v); markHistory(current.id); renderSheet(v);
+  };
+}
+const clean = w => w.toLowerCase().replace(/[^a-z'’-]/g,'').replace(/^['’-]+|['’-]+$/g,'');
+
+function renderSheet(text){
+  const lines=text.replace(/\r/g,'').split('\n');
+  const cache=S.get(K.tr(current.id),{});
+  const vocab=S.get(K.vocab,[]).map(v=>v.w);
+  const html=lines.map((l,i)=>{
+    if(!l.trim()) return '<div class="line blank"></div>';
+    const words=l.split(/(\s+)/).map(tok=>{
+      const c=clean(tok);
+      if(!c) return esc(tok);
+      return `<span class="w${vocab.includes(c)?' known':''}" data-w="${esc(c)}">${esc(tok)}</span>`;
+    }).join('');
+    return `<p class="line">${words}</p><p class="tr" data-l="${i}">${esc(cache[i]||'')}</p>`;
+  }).join('');
+  $('#lyrArea').innerHTML=`
+    <div class="sheet">
+      <div class="sheethead">
+        <b>Tocca una parola per tradurla</b>
+        <span class="row">
+          <button class="mini ${showTr?'on':''}" id="tgl">Traduzione</button>
+          <button class="mini" id="edit">Modifica</button>
+        </span>
+      </div>
+      <div class="lines" id="lines">${html}</div>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <h3>Di cosa parla</h3>
+      <div id="meaning"><p>Una spiegazione del significato, del tono e dei modi di dire del brano.</p>
+      <button class="btn mint" id="explain">Spiegami la canzone</button></div>
+    </div>`;
+  $('#lines').classList.toggle('hidetr', !showTr);
+  applyTrVisibility();
+  $('#tgl').onclick=()=>{ showTr=!showTr; $('#tgl').classList.toggle('on',showTr); applyTrVisibility(); if(showTr) translateAll(lines); };
+  $('#edit').onclick=()=>renderPaste(text);
+  $('#explain').onclick=()=>explain(text);
+  const saved=S.get(K.mean(current.id),'');
+  if(saved) showMeaning(saved);
+  $('#lines').addEventListener('click', e=>{ const w=e.target.closest('.w'); if(w) openWord(w.dataset.w); });
+  if(showTr) translateAll(lines);
+}
+function applyTrVisibility(){ document.querySelectorAll('#lines .tr').forEach(p=>p.style.display=showTr?'block':'none'); }
+
+/* traduzione riga per riga (MyMemory, gratuito) */
+async function translateAll(lines){
+  const cache=S.get(K.tr(current.id),{}); const id=current.id;
+  for(let i=0;i<lines.length;i++){
+    if(!lines[i].trim() || cache[i]) continue;
+    const el=document.querySelector(`#lines .tr[data-l="${i}"]`); if(!el) continue;
+    el.textContent='traduco…'; el.classList.add('pending');
+    const t=await mmTranslate(lines[i]);
+    if(current.id!==id) return;
+    el.classList.remove('pending');
+    if(t){ cache[i]=t; el.textContent=t; S.set(K.tr(id),cache); }
+    else { el.textContent=''; }
+  }
+}
+async function mmTranslate(text, pair='en|it'){
+  try{
+    const r=await fetch('https://api.mymemory.translated.net/get?langpair='+pair+'&q='+encodeURIComponent(text.slice(0,480)));
+    const d=await r.json();
+    const t=d?.responseData?.translatedText;
+    if(!t || /MYMEMORY WARNING|QUERY LENGTH LIMIT/i.test(t)) return '';
+    return t;
+  }catch(e){ return ''; }
+}
+
+/* ============ parola singola ============ */
+async function openWord(w){
+  const card=$('#wordcard'), scrim=$('#scrim');
+  const vocab=S.get(K.vocab,[]);
+  const already=vocab.some(v=>v.w===w);
+  card.innerHTML=`<div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div><h2>${esc(w)}</h2><div class="phon" id="ph">…</div></div>
+      <button class="x" id="close" aria-label="Chiudi">✕</button>
+    </div>
+    <div class="big" id="it">traduco…</div>
+    <ul class="defs" id="defs"></ul>
+    <div class="row" style="margin-top:16px">
+      <button class="btn ${already?'ghost':''}" id="save">${already?'Già nel vocabolario':'Salva la parola'}</button>
+      <button class="btn ghost" id="say">Pronuncia</button>
+    </div>`;
+  scrim.classList.add('on'); card.classList.add('on');
+  $('#close').onclick=closeWord; scrim.onclick=closeWord;
+  $('#say').onclick=()=>{ try{ const u=new SpeechSynthesisUtterance(w); u.lang='en-GB'; speechSynthesis.speak(u);}catch(e){} };
+
+  const it = await mmTranslate(w);
+  $('#it').textContent = it || 'traduzione non disponibile';
+  $('#save').onclick=()=>{
+    const v=S.get(K.vocab,[]);
+    if(v.some(x=>x.w===w)){ toast('Già salvata'); return; }
+    v.unshift({w, it, song:current?current.title:'', artist:current?current.artist:'', at:Date.now()});
+    S.set(K.vocab,v); $('#save').textContent='Salvata'; $('#save').classList.add('ghost');
+    document.querySelectorAll(`#lines .w[data-w="${CSS.escape(w)}"]`).forEach(e=>e.classList.add('known'));
+    toast('Aggiunta al vocabolario');
+  };
+  try{
+    const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w));
+    if(r.ok){
+      const d=(await r.json())[0];
+      $('#ph').textContent=d.phonetic||d.phonetics?.find(p=>p.text)?.text||'';
+      const out=[];
+      (d.meanings||[]).slice(0,3).forEach(m=>{
+        const def=m.definitions?.[0]; if(def) out.push(`<li><em>${esc(m.partOfSpeech)}</em> — ${esc(def.definition)}</li>`);
+      });
+      $('#defs').innerHTML=out.join('');
+    } else $('#ph').textContent='';
+  }catch(e){ $('#ph').textContent=''; }
+}
+function closeWord(){ $('#wordcard').classList.remove('on'); $('#scrim').classList.remove('on'); }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeWord(); });
+
+/* ============ significato (Claude) ============ */
+async function explain(text){
+  const btn=$('#explain'); btn.disabled=true; btn.textContent='Ci sto lavorando…';
+  const prompt=`Sei un insegnante di inglese per studenti italiani. Ecco il testo della canzone "${current.title}" di ${current.artist} (${current.year}).
+Scrivi in italiano, senza citare più di 5 parole di seguito del testo originale:
+1. Di cosa parla la canzone (5-6 righe).
+2. Il contesto: chi l'ha scritta, quando, perché è nota (2-3 righe).
+3. Cinque espressioni idiomatiche o costruzioni utili che compaiono nel testo, ognuna spiegata in una riga.
+4. Il livello di difficoltà (A2-C1) e a chi la consiglieresti.
+TESTO:
+${text.slice(0,4000)}`;
+  try{
+    const headers={'Content-Type':'application/json','anthropic-version':'2023-06-01'};
+    if(settings.ai){ headers['x-api-key']=settings.ai; headers['anthropic-dangerous-direct-browser-access']='true'; }
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers,
+      body:JSON.stringify({model:settings.model||'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    if(!r.ok) throw new Error('api');
+    const d=await r.json();
+    const out=(d.content||[]).map(c=>c.text||'').join('\n').trim();
+    if(!out) throw new Error('empty');
+    S.set(K.mean(current.id), out); showMeaning(out);
+  }catch(e){
+    btn.disabled=false; btn.textContent='Spiegami la canzone';
+    toast(settings.ai?'La richiesta non è andata a buon fine':'Aggiungi la chiave API nelle impostazioni');
+    if(!settings.ai) go('settings');
+  }
+}
+function showMeaning(txt){
+  $('#meaning').innerHTML = txt.split('\n').filter(l=>l.trim())
+    .map(l=>`<p style="color:var(--text);font-size:15px;margin:0 0 10px">${esc(l)}</p>`).join('')
+    + `<button class="btn ghost" id="redo">Rigenera</button>`;
+  $('#redo').onclick=()=>{ S.del(K.mean(current.id)); const t=S.get(K.lyr(current.id),''); $('#meaning').innerHTML='<button class="btn mint" id="explain">Spiegami la canzone</button>'; $('#explain').onclick=()=>explain(t); };
+}
+
+/* ============ storico ============ */
+function pushHistory(s){
+  const h=S.get(K.hist,[]).filter(x=>x.id!==s.id);
+  h.unshift({...s, at:Date.now(), lyrics:!!S.get(K.lyr(s.id),'')});
+  S.set(K.hist, h.slice(0,200));
+}
+function markHistory(id){
+  const h=S.get(K.hist,[]); const i=h.findIndex(x=>x.id===id);
+  if(i>-1){ h[i].lyrics=true; S.set(K.hist,h); }
+}
+const when = ts => { const d=Math.floor((Date.now()-ts)/86400000);
+  return d===0?'oggi':d===1?'ieri':d<30?d+' giorni fa':new Date(ts).toLocaleDateString('it-IT'); };
+function renderHistory(){
+  const h=S.get(K.hist,[]);
+  if(!h.length){ $('#v-history').innerHTML='<div class="empty"><b>Lo storico è vuoto</b>Le canzoni che apri finiscono qui, con il testo che hai salvato.</div>'; return; }
+  $('#v-history').innerHTML=`<h2 style="margin:0 0 14px;font-size:20px">Storico</h2>`+
+    h.map((s,i)=>`<button class="card" data-i="${i}">
+      <img src="${esc(s.art)}" alt="">
+      <span style="flex:1;min-width:0"><b>${esc(s.title)}</b><span>${esc(s.artist)} · ${esc(s.year)} · ${when(s.at)}${s.lyrics?' · testo salvato':''}</span></span>
+    </button>`).join('');
+  document.querySelectorAll('#v-history .card').forEach(b=>b.onclick=()=>{ current=h[+b.dataset.i]; go('song'); renderSong(); });
+}
+
+/* ============ vocabolario ============ */
+let flashIdx=-1;
+function renderVocab(){
+  const v=S.get(K.vocab,[]);
+  if(!v.length){ $('#v-vocab').innerHTML='<div class="empty"><b>Nessuna parola salvata</b>Tocca una parola nel testo di una canzone e salvala qui.</div>'; return; }
+  $('#v-vocab').innerHTML=`
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <h2 style="margin:0;font-size:20px">${v.length} parole</h2>
+      <button class="btn mint" id="review">Ripassa</button>
+    </div>
+    <div id="flash"></div>
+    ${v.map((x,i)=>`<div class="vword">
+      <span><b>${esc(x.w)}</b> <i>${esc(x.it)}</i><small>${esc(x.song)}${x.artist?' — '+esc(x.artist):''}</small></span>
+      <button class="x" data-i="${i}" aria-label="Rimuovi">✕</button></div>`).join('')}`;
+  $('#review').onclick=()=>flash(v);
+  document.querySelectorAll('#v-vocab .x').forEach(b=>b.onclick=()=>{
+    const l=S.get(K.vocab,[]); l.splice(+b.dataset.i,1); S.set(K.vocab,l); renderVocab();
+  });
+}
+function flash(v){
+  const x=v[Math.floor(Math.random()*v.length)];
+  $('#flash').innerHTML=`<div class="flash"><h2>${esc(x.w)}</h2><div class="rev" id="rev">?</div>
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button class="btn ghost" id="show">Mostra</button><button class="btn" id="next">Un'altra</button></div></div>`;
+  $('#show').onclick=()=>$('#rev').textContent=x.it||'—';
+  $('#next').onclick=()=>flash(v);
+}
+
+/* ============ impostazioni ============ */
+$('#auddKey').value=settings.audd||''; $('#aiKey').value=settings.ai||''; $('#aiModel').value=settings.model||'claude-sonnet-4-6'; $('#proxy').value=settings.proxy||'';
+const saveSet=()=>{ settings={audd:$('#auddKey').value.trim(), ai:$('#aiKey').value.trim(), model:$('#aiModel').value.trim()||'claude-sonnet-4-6', proxy:$('#proxy').value.trim()}; S.set(K.set,settings); };
+['auddKey','aiKey','aiModel','proxy'].forEach(id=>$('#'+id).addEventListener('change',()=>{ saveSet(); toast('Salvato'); }));
+$('#exportData').onclick=()=>{
+  const data={}; try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith('ll.')) data[k]=localStorage.getItem(k); } }catch(e){}
+  const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='ritornello-backup.json'; a.click();
+};
+$('#wipe').onclick=()=>{ if(!confirm('Cancello storico, testi e vocabolario?')) return;
+  try{ Object.keys(localStorage).filter(k=>k.startsWith('ll.')).forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  Object.keys(mem).forEach(k=>delete mem[k]); current=null; toast('Fatto'); go('search'); };
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
