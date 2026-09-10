@@ -221,7 +221,7 @@ input.f{width:100%;background:var(--ink);border:1px solid var(--line);border-rad
 
     <div class="panel">
       <h3>Spiegazione del significato</h3>
-      <p>Serve una chiave di un servizio di intelligenza artificiale. La via gratuita è <b>Google AI Studio</b>: vai su aistudio.google.com, accedi col tuo account Google, tocca "Get API key", copia la chiave (comincia per AIza) e incollala qui. Nessuna carta di credito. In alternativa funziona anche una chiave Anthropic (sk-ant-…), a consumo.</p>
+      <p>Serve una chiave di un servizio di intelligenza artificiale. La via gratuita è <b>Google AI Studio</b>: vai su aistudio.google.com, accedi col tuo account Google, tocca "Get API key", crea la chiave e incollala qui. Nessuna carta di credito. In alternativa funziona anche una chiave Anthropic (sk-ant-…), a consumo.</p>
       <label class="f" for="aiKey">Chiave</label>
       <input class="f" id="aiKey" type="password" placeholder="incolla la chiave" autocomplete="off">
       <p id="keyKind" style="margin:6px 0 0;font-size:13px;color:var(--muted)"></p>
@@ -247,6 +247,7 @@ input.f{width:100%;background:var(--ink);border:1px solid var(--line);border-rad
       </div>
     </div>
     <p class="hint">I testi arrivano da archivi pubblici mantenuti dalla comunità (LRCLIB, lyrics.ovh) e restano sul tuo dispositivo: Ritornello non ne conserva né ridistribuisce copie. Sono materiale protetto da copyright, quindi vanno usati per studio personale.</p>
+    <p class="hint" style="text-align:center;font-size:12px;color:var(--gold)">Ritornello · versione 6</p>
   </section>
 </main>
 
@@ -683,7 +684,7 @@ $('#testKey').onclick=async ()=>{
   try{
     const r=await callAI('Rispondi soltanto con la parola: funziona');
     out.style.color='var(--mint)';
-    out.textContent='Tutto a posto, la chiave risponde. ('+(settings.ai.startsWith('AIza')?'Google':'Anthropic')+')';
+    out.textContent='Tutto a posto, la chiave risponde. ('+(provider(settings.ai)==='google'?'Google':'Anthropic')+')';
   }catch(e){
     out.style.color='var(--rose)';
     out.textContent=String(e.message);

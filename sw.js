@@ -1,4 +1,4 @@
-const CACHE = 'ritornello-v5';
+const CACHE = 'ritornello-v6';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
